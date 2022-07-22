@@ -9,7 +9,6 @@ int main(int argc, char **argv) {
   }
 
   init_locals();
-  label_count = 0;
   
   user_input = argv[1];
   // トークナイズする
@@ -24,6 +23,9 @@ int main(int argc, char **argv) {
 
   gen_prologue();
 
+  // ラベルが重複しないように偶奇で分ける
+  label_loop_count = 0;
+  label_if_count = 1;
   // 先頭の式から順にコード生成
   for (int i = 0; code[i]; i++) {
     gen(code[i]);

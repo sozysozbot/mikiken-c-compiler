@@ -132,6 +132,18 @@ Node *stmt() {
     node->then = stmt();
   }
   
+  else if (consume(TK_RESERVED, "{")) {
+    node = new_node(ND_BLOCK);
+    Node head;
+    Node *cur = &head;
+    while (!consume(TK_RESERVED, "}")) {
+      cur = cur->next = new_node(ND_STMT);
+      cur->next = NULL;
+      cur->body = stmt();
+    }
+    node->stmts = head.next;
+  }
+
   else {
     node = expr();
     expect(";");

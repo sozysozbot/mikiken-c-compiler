@@ -16,6 +16,7 @@ assert() {
   fi
 }
 
+# << COMMENTOUT
 assert 0 '0;'
 assert 42 '42;'
 
@@ -84,5 +85,11 @@ assert 5 'x=0; while(x<5) x=x+1; return x;'
 
 assert 5 'x=0; for(i=0;i<5;i=i+1) x=x+1; return x;'
 assert 3 'for (;;) return 3;'
+
+# COMMENTOUT
+assert 2 '{ return 2; }'
+assert 8 '{a=2; b = 6; return a+b;}'
+assert 6 'a=0; for(i=0; i<10; i=i+1){a=a+2; if(a==6) return a;}'
+assert 40 'a=0; b=0; for(i=0; i<10; i=i+1){a=a+1; if(i==9){a=a*2;}} for(j=0; j<10; j=j+1){b=b+1; if(j==9){b=b*2;}} return a+b;'
 
 echo OK

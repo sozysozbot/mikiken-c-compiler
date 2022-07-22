@@ -69,6 +69,8 @@ typedef enum {
   ND_ASSIGN, // =
   ND_NUM,    // 整数
   ND_LVAR,   // ローカル変数
+  ND_BLOCK,  // {}
+  ND_STMT,
   ND_RETURN, // return
   ND_IF,     // if
   ND_FOR,    // for | while
@@ -90,11 +92,16 @@ struct Node {
   // for (init; cond; inc) then;
   Node *init;
   Node *inc;
+  // ... { stmt* } ...
+  Node *stmts;
+  Node *next;
+  Node *body;
 };
 
 extern Node *code[100];
 
-int label_count; // アセンブラのラベルの通し番号
+int label_loop_count; // アセンブラのラベル番号(ループ用)
+int label_if_count;   // アセンブラのラベル番号(if用)
 
 void parse();
 
