@@ -58,6 +58,7 @@ Token *tokenize();
 
 // 抽象構文木のノードの種類
 typedef enum {
+  ND_STMT,
   ND_ADD,    // +
   ND_SUB,    // -
   ND_MUL,    // *
@@ -70,7 +71,6 @@ typedef enum {
   ND_NUM,    // 整数
   ND_LVAR,   // ローカル変数
   ND_BLOCK,  // {}
-  ND_STMT,
   ND_RETURN, // return
   ND_IF,     // if
   ND_FOR,    // for | while
@@ -96,15 +96,13 @@ struct Node {
   Node *stmts;
   Node *next;
   Node *body;
+  int label;
 };
 
-extern Node *code[100];
-
-int label_loop_count; // アセンブラのラベル番号(ループ用)
-int label_if_count;   // アセンブラのラベル番号(if用)
+Node top;
 
 void parse();
 
 void gen_prologue();
 void gen_epilogue();
-void gen(Node *node);
+void gen(Node *node, int depth);

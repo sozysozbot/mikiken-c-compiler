@@ -65,8 +65,6 @@ bool at_eof() {
   return token->kind == TK_EOF;
 }
 
-Node *code[100];
-
 void program();
 Node *stmt();
 Node *expr();
@@ -79,16 +77,20 @@ Node *unary();
 Node *primary();
 
 void parse() {
+  init_locals();
   program();
 }
 
 void program() {
-  int i = 0;
+  int label = 0;
+  Node *cur = &top;
   while (!at_eof()) {
-    code[i] = stmt();
-    i++;
+    cur = cur->next = new_node(ND_STMT);
+    cur->label = label;
+    cur->body = stmt();
+    label++;
   }
-  code[i] = NULL;
+  cur->next = NULL;
 }
 
 Node *stmt() {
@@ -133,13 +135,16 @@ Node *stmt() {
   }
   
   else if (consume(TK_RESERVED, "{")) {
+    int label = 0;
     node = new_node(ND_BLOCK);
     Node head;
     Node *cur = &head;
     while (!consume(TK_RESERVED, "}")) {
       cur = cur->next = new_node(ND_STMT);
+      cur->label = label;
       cur->next = NULL;
       cur->body = stmt();
+      label++;
     }
     node->stmts = head.next;
   }

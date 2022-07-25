@@ -22,7 +22,7 @@ void gen_lval(Node *node) {
   printf("  push rax\n");
 }
 
-void gen(Node *node) {
+void gen(Node *node, int depth) {
   switch (node->kind) {
     case ND_NUM:
       printf("  push %d\n", node->val);
@@ -35,14 +35,14 @@ void gen(Node *node) {
       return;
     case ND_ASSIGN:
       gen_lval(node->lhs);
-      gen(node->rhs);
+      gen(node->rhs, depth);
       printf("  pop rdi\n");
       printf("  pop rax\n");
       printf("  mov [rax], rdi\n");
       printf("  push rdi\n");
       return;
     case ND_RETURN:
-      gen(node->lhs);
+      gen(node->lhs, depth);
       printf("  pop rax\n");
       printf("  mov rsp, rbp\n");
       printf("  pop rbp\n");
@@ -50,55 +50,53 @@ void gen(Node *node) {
       return;
     case ND_IF:
       if (node->els) {
-        gen(node->cond);
+        gen(node->cond, depth);
         printf("  pop rax\n");
         printf("  cmp rax, 0\n");
-        printf("  je  .L.else%d\n",label_if_count);
-        gen(node->then);
-        printf("  jmp .L.end%d\n", label_if_count);
+        printf("  je  .L.else%d.%d\n", node->label, depth);
+        gen(node->then, depth);
+        printf("  jmp .L.endif%d.%d\n", node->label, depth);
 
-        printf(".L.else%d:\n", label_if_count);
-        gen(node->els);
+        printf(".L.else%d.%d:\n", node->label, depth);
+        gen(node->els, depth);
 
-        printf(".L.end%d:\n", label_if_count);
+        printf(".L.endif%d.%d:\n", node->label, depth);
       } else {
-        gen(node->cond);
+        gen(node->cond, depth);
         printf("  pop rax\n");
         printf("  cmp rax, 0\n");
-        printf("  je  .L.end%d\n",label_if_count);
-        gen(node->then);
+        printf("  je  .L.endif%d.%d\n", node->label, depth);
+        gen(node->then, depth);
 
-        printf(".L.end%d:\n", label_if_count);
+        printf(".L.endif%d.%d:\n", node->label, depth);
       }
-      label_if_count += 2;
       return;
     case ND_FOR:
       if (node->init)
-        gen(node->init);
-      printf(".L.begin%d:\n", label_loop_count);
+        gen(node->init, depth);
+      printf(".L.beginloop%d.%d:\n", node->label, depth);
       if (node->cond) {
-        gen(node->cond);
+        gen(node->cond, depth);
         printf("  pop rax\n");
         printf("  cmp rax, 0\n");
-        printf("  je  .L.end%d\n", label_loop_count);
+        printf("  je  .L.endloop%d.%d\n", node->label, depth);
       }
-      gen(node->then);
+      gen(node->then, depth);
       if (node->inc)
-        gen(node->inc);
-      printf("  jmp .L.begin%d\n", label_loop_count);
-      printf(".L.end%d:\n", label_loop_count);
-      label_loop_count += 2;
+        gen(node->inc, depth);
+      printf("  jmp .L.beginloop%d.%d\n", node->label, depth);
+      printf(".L.endloop%d.%d:\n", node->label, depth);
       return;
     case ND_BLOCK:
       for (Node *p = node->stmts; p; p = p->next) {
-        gen(p->body);
+        gen(p->body, depth + 1);
         printf("  pop rax\n");
       }
       return;
   }
 
-  gen(node->lhs);
-  gen(node->rhs);
+  gen(node->lhs, depth);
+  gen(node->rhs, depth);
 
   printf("  pop rdi\n");
   printf("  pop rax\n");
